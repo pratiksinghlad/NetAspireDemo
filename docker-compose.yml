@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   weatherapi:
     build:
@@ -49,7 +47,6 @@ networks:
 
 # For development, you can override settings with docker-compose.override.yml
 # Example override file content:
-# version: '3.8'
 # services:
 #   weatherapi:
 #     environment:
