@@ -3,6 +3,9 @@ using WeatherApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add Aspire service defaults
+builder.AddServiceDefaults();
+
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -19,9 +22,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Add health checks
-builder.Services.AddHealthChecks();
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -34,8 +34,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseCors("AllowWebApp");
 
-// Health check endpoint
-app.MapHealthChecks("/health");
+// Map default endpoints (includes health checks)
+app.MapDefaultEndpoints();
 
 // Weather API endpoints
 app.MapGet("/api/weather/forecast", (IWeatherService weatherService, string? city) =>

@@ -2,6 +2,9 @@ using WeatherWeb.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add Aspire service defaults
+builder.AddServiceDefaults();
+
 // Add services to the container.
 builder.Services.AddRazorPages();
 
@@ -15,9 +18,6 @@ builder.Services.AddHttpClient<IWeatherApiClient, WeatherApiClient>(client =>
     client.BaseAddress = new Uri(weatherApiBaseUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
 });
-
-// Add health checks
-builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
@@ -36,8 +36,8 @@ app.UseRouting();
 
 app.UseAuthorization();
 
-// Health check endpoint
-app.MapHealthChecks("/health");
+// Map default endpoints (includes health checks)
+app.MapDefaultEndpoints();
 
 app.MapRazorPages();
 

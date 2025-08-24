@@ -1,148 +1,320 @@
-# NetAspireDemo - Weather Application
+# NetAspireDemo - .NET Aspire Weather Application
 
 [![CI/CD Pipeline](https://github.com/pratiksinghlad/NetAspireDemo/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/pratiksinghlad/NetAspireDemo/actions/workflows/ci-cd.yml)
 
-A complete, production-ready demo application showcasing a modern .NET 8 weather dashboard with separate API and web frontend, Docker containerization, and CI/CD pipeline.
+A complete .NET Aspire demonstration showcasing Microsoft's opinionated, cloud-ready stack for building observable, production-ready, distributed applications with a weather API and web frontend.
 
-## 🏗️ Architecture
+## 🌟 What is .NET Aspire?
 
-This solution demonstrates a microservices architecture with:
+.NET Aspire is Microsoft's opinionated, cloud-ready stack that provides:
 
-- **WeatherApi** - ASP.NET Core Web API with minimal APIs providing weather endpoints
-- **WeatherWeb** - Razor Pages frontend consuming the Weather API
-- **SharedModels** - Common DTOs shared between projects
-- **WeatherApi.Tests** - Unit tests for the API services
+- **🔍 Observability**: Built-in telemetry, logging, and health checks
+- **🔧 Orchestration**: Simplified service discovery and configuration management  
+- **💪 Resilience**: Automatic retry policies and circuit breakers
+- **📊 Dashboard**: Rich development-time dashboard for monitoring your application
+- **⚙️ Service Defaults**: Pre-configured settings for common scenarios
+
+## 🆕 .NET 9 & Central Package Management
+
+This project has been migrated to **.NET 9** with **Central Package Management** for improved maintainability:
+
+- **📦 Directory.Packages.props**: Centralized package version management
+- **🔧 Directory.Build.props**: Global project settings and properties  
+- **🎯 .NET 9 Target Framework**: Latest stable framework with performance improvements
+- **📋 Simplified Project Files**: Cleaner `.csproj` files without version specifications
+
+## 🏗️ Project Architecture
+
+```
+📁 NetAspireDemo/
+├── 📦 Directory.Packages.props          # Central package version management
+├── 🔧 Directory.Build.props             # Global MSBuild properties
+├── 🎯 src/NetAspireDemo.AppHost/        # Aspire orchestrator (START HERE)
+├── ⚙️ src/NetAspireDemo.ServiceDefaults/ # Shared Aspire configurations
+├── 🌐 src/WeatherApi/                   # Weather API service
+├── 🖥️ src/WeatherWeb/                   # Web frontend
+├── 📦 src/SharedModels/                 # Common data models
+└── 🧪 tests/WeatherApi.Tests/           # Unit tests
+```
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download)
-- [Docker](https://www.docker.com/get-started) (for containerized deployment)
-- [Docker Compose](https://docs.docker.com/compose/)
+- [.NET 9 SDK](https://dotnet.microsoft.com/download) (**Required**)
+- [Docker Desktop](https://www.docker.com/get-started) (optional, for containers)
 
-### Local Development (dotnet run)
+### 🎯 **Option 1: Run with .NET Aspire (RECOMMENDED)**
 
-1. **Clone the repository**
+> **⚠️ Note for .NET 10 Preview Users**: If you encounter DCP/Dashboard path errors, this is a known issue with .NET 10 preview versions. Use Option 2 or 3 below while Microsoft stabilizes the Aspire tooling for preview SDKs.
+
+**For .NET 9 SDK Users:**
+
+1. **Clone and build**
    ```bash
    git clone https://github.com/pratiksinghlad/NetAspireDemo.git
    cd NetAspireDemo
-   ```
-
-2. **Build the solution**
-   ```bash
    dotnet build
    ```
 
-3. **Run tests**
+2. **Start Aspire AppHost** (this starts everything!)
    ```bash
-   dotnet test
+   dotnet run --project src/NetAspireDemo.AppHost
    ```
 
-4. **Start the API** (Terminal 1)
+3. **🎉 Access the applications:**
+   - **📊 Aspire Dashboard**: `https://localhost:15001` (monitoring & insights)
+   - **🌐 Weather API**: `http://localhost:5001` (auto-detected port)
+   - **🖥️ Weather Web**: `http://localhost:5000` (auto-detected port)
+
+**For .NET 10 Preview Users:**
+```bash
+# Use Option 2 below until Aspire tooling is updated for .NET 10 preview
+```
+
+### 🔧 **Option 2: Traditional Development (Individual Services)**
+
+1. **Start the API** (Terminal 1)
    ```bash
    dotnet run --project src/WeatherApi
    ```
-   API will be available at http://localhost:5001/swagger
 
-5. **Start the Web App** (Terminal 2)
+2. **Start the Web App** (Terminal 2)
    ```bash
    dotnet run --project src/WeatherWeb
-   ```
-   Web app will be available at http://localhost:5000
-
-### Docker Compose (Recommended)
-
-Run the complete application stack with a single command:
+### 🐳 **Option 3: Docker Compose (Production-like)**
 
 ```bash
 docker compose up --build
 ```
 
-This will:
-- Build both Docker images
-- Start the API on http://localhost:5001
-- Start the Web app on http://localhost:5000
-- Set up proper networking between containers
+## 📊 **The .NET Aspire Dashboard - Your Command Center**
 
-To run in background:
+When you run the AppHost, the Aspire Dashboard automatically opens and provides:
+
+### 🎯 **Dashboard Features**
+
+| Tab | What You See | Why It's Useful |
+|-----|-------------|----------------|
+| **🏠 Resources** | All running services, their status, and endpoints | Quick overview of your entire application |
+| **📊 Metrics** | Real-time performance metrics, request rates, response times | Monitor application performance |
+| **🔍 Traces** | Distributed traces showing request flow across services | Debug issues and understand request paths |
+| **📝 Logs** | Centralized logs from all services with correlation | Unified debugging and monitoring |
+| **⚙️ Config** | Environment variables and configuration values | Verify service configuration |
+
+### 🚀 **What the Dashboard Adds**
+
+1. **🔍 Real-time Observability**
+   - See all services and their health status instantly
+   - Monitor CPU, memory, and request metrics live
+   - View distributed traces across your microservices
+
+2. **🐛 Enhanced Debugging**
+   - Correlate logs across all services
+   - Trace requests from frontend to API
+   - Identify performance bottlenecks quickly
+
+3. **⚡ Development Velocity**
+   - No need to set up separate monitoring tools
+   - Instant feedback on code changes
+   - Quick access to all service endpoints
+
+4. **🔧 Configuration Management**
+   - View all environment variables in one place
+   - Validate service configuration
+   - Easy service discovery setup
+
+## 🤔 **Why Do We Need .NET Aspire?**
+
+### **Without Aspire** 😤
 ```bash
-docker compose up -d --build
+# Start API manually
+cd src/WeatherApi && dotnet run &
+
+# Start Web manually in another terminal
+cd src/WeatherWeb && dotnet run &
+
+# Check logs in multiple places
+# Set up monitoring tools separately
+# Configure service discovery manually
+# Handle health checks individually
 ```
 
-To stop:
+### **With Aspire** 😍
 ```bash
-docker compose down
+# Start everything with one command
+dotnet run --project src/NetAspireDemo.AppHost
+
+# Everything is automatically:
+# ✅ Started and orchestrated
+# ✅ Monitored and observed
+# ✅ Health-checked
+# ✅ Connected with service discovery
+# ✅ Logged and traced
 ```
 
-## 📱 Using the Application
+### **Key Benefits:**
 
-1. Open your browser to http://localhost:5000
-2. Enter a city name (try: New York, London, Tokyo, Sydney, Berlin)
-3. Click "Get Weather" to see:
-   - Current weather conditions
-   - 5-day forecast
-   - Temperature in both Celsius and Fahrenheit
+🎯 **Simplified Development**
+- Single command to start your entire distributed application
+- Automatic service discovery and configuration
+- Built-in health checks and monitoring
 
-## 🛠️ Development
+📊 **Built-in Observability**
+- No need to set up Prometheus, Grafana, or other monitoring tools
+- Automatic telemetry collection and visualization
+- Distributed tracing out of the box
 
-### Project Structure
+🔧 **Production Readiness**
+- Industry-standard OpenTelemetry integration
+- Resilience patterns (retry, circuit breaker)
+- Configuration and secrets management
+
+⚡ **Developer Experience**
+- Rich dashboard for real-time insights
+- Hot reload and fast iteration
+- Integrated debugging and diagnostics
+
+## 📱 **Using the Application**
+
+1. **Start with Aspire**: `dotnet run --project src/NetAspireDemo.AppHost`
+2. **Open Dashboard**: Browser automatically opens to `https://localhost:15001`
+3. **Use the App**: Navigate to Weather Web at `http://localhost:5000`
+4. **Monitor**: Watch real-time metrics and traces in the dashboard
+
+### **Try These Features:**
+- Enter different city names (New York, London, Tokyo, Sydney)
+- Watch the request traces flow from Web → API
+- Monitor response times and success rates
+- View structured logs with correlation IDs
+
+## 🛠️ **Troubleshooting**
+
+### **Common Issue: Aspire DCP/Dashboard Path Error**
+
+**Error Message:**
+```
+Property CliPath: The path to the DCP executable used for Aspire orchestration is required.
+Property DashboardPath: The path to the Aspire Dashboard binaries is missing.
+```
+
+**Solution Options:**
+
+1. **Use Stable .NET 8 SDK** (Recommended)
+   ```bash
+   # Download and install .NET 8 SDK from https://dotnet.microsoft.com/download/dotnet/8.0
+   dotnet --version  # Should show 8.x.x
+   dotnet run --project src/NetAspireDemo.AppHost
+   ```
+
+2. **Use Individual Services** (Alternative)
+   ```bash
+   # Terminal 1: Start API
+   dotnet run --project src/WeatherApi
+   
+   # Terminal 2: Start Web (in new terminal)
+   dotnet run --project src/WeatherWeb
+   ```
+
+3. **Use Docker Compose** (Production-like)
+   ```bash
+   docker compose up --build
+   ```
+
+### **Other Common Issues**
+
+**Build Errors:**
+```bash
+# Clean and restore
+dotnet clean
+dotnet restore
+dotnet build
+```
+
+**Connection Refused:**
+- Ensure API is running before starting Web app
+- Check `WeatherApiBaseUrl` configuration
+- Verify ports 5000 and 5001 are available
+
+**Docker Issues:**
+- Ensure Docker Desktop is running
+- Check you're running from repository root
+- Verify Docker daemon is accessible
+
+### **Enhanced Project Structure**
 
 ```
 NetAspireDemo/
-├── src/
-│   ├── WeatherApi/          # ASP.NET Core Web API
-│   │   ├── Services/        # Business logic
-│   │   ├── Dockerfile       # API container definition
-│   │   └── Program.cs       # API configuration
-│   ├── WeatherWeb/          # Razor Pages frontend
-│   │   ├── Pages/           # Razor pages
-│   │   ├── Services/        # HTTP client services
-│   │   ├── Dockerfile       # Web container definition
-│   │   └── Program.cs       # Web app configuration
-│   └── SharedModels/        # Common DTOs
-├── tests/
-│   └── WeatherApi.Tests/    # Unit tests
-├── docker-compose.yml       # Multi-container orchestration
-├── .github/workflows/       # CI/CD pipeline
-└── README.md
+├── 🎯 src/NetAspireDemo.AppHost/          # 🌟 Aspire Orchestrator
+│   ├── Program.cs                         # Service definitions and dependencies
+│   └── Properties/launchSettings.json     # Launch profiles for dashboard
+├── ⚙️ src/NetAspireDemo.ServiceDefaults/   # 🌟 Aspire Service Defaults
+│   ├── Extensions.cs                      # OpenTelemetry, health checks, resilience
+│   └── NetAspireDemo.ServiceDefaults.csproj
+├── 🌐 src/WeatherApi/                     # Weather API Service
+│   ├── Services/IWeatherService.cs        # Business logic interface
+│   ├── Services/WeatherService.cs         # Weather data implementation
+│   ├── Program.cs                         # 🌟 Enhanced with Aspire
+│   └── Dockerfile                         # Container definition
+├── 🖥️ src/WeatherWeb/                     # Web Frontend
+│   ├── Pages/Index.cshtml                 # Weather dashboard UI
+│   ├── Services/IWeatherApiClient.cs      # API client interface
+│   ├── Services/WeatherApiClient.cs       # 🌟 Enhanced with resilience
+│   ├── Program.cs                         # 🌟 Enhanced with Aspire
+│   └── Dockerfile                         # Container definition
+├── 📦 src/SharedModels/                   # Common Models
+└── 🧪 tests/WeatherApi.Tests/             # Unit Tests
 ```
 
-### API Endpoints
+### **🌟 Aspire-Enhanced API Endpoints**
 
-The Weather API provides the following endpoints:
+| Endpoint | Description | Aspire Enhancement |
+|----------|-------------|-------------------|
+| `GET /api/weather/forecast?city={city}` | 5-day forecast | ✅ Traced & Monitored |
+| `GET /api/weather/{city}` | Current weather | ✅ Traced & Monitored |
+| `GET /health` | Health check | ✅ Enhanced health reporting |
+| `GET /alive` | Liveness probe | ✅ Aspire-specific endpoint |
+| `GET /swagger` | API documentation | ✅ Available in dashboard |
 
-- `GET /api/weather/forecast?city={city}` - 5-day weather forecast
-- `GET /api/weather/{city}` - Current weather for city
-- `GET /health` - Health check endpoint
-- `GET /swagger` - API documentation
+### **🔧 Configuration & Environment Variables**
 
-### Environment Variables
+| Variable | Description | Default | Aspire Feature |
+|----------|-------------|---------|----------------|
+| `WeatherApiBaseUrl` | API endpoint for web app | Auto-discovered | ✅ Service Discovery |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | OpenTelemetry endpoint | Not set | ✅ Telemetry Export |
+| `ASPNETCORE_ENVIRONMENT` | Environment setting | Development | ✅ Environment-aware |
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `WEATHER_API_BASE_URL` | Base URL for the Weather API | `http://localhost:5001` |
-| `ASPNETCORE_ENVIRONMENT` | ASP.NET Core environment | `Development` |
+## 🧪 **Testing & Quality**
 
-## 🧪 Testing
+### **Run Tests**
 
-Run all tests:
 ```bash
+# Run all tests
 dotnet test
-```
 
-Run tests with coverage:
-```bash
+# Run with coverage
 dotnet test --collect:"XPlat Code Coverage"
+
+# Run specific test project
+dotnet test tests/WeatherApi.Tests/
 ```
 
-The test suite includes:
-- Weather service unit tests
-- Data validation tests
-- Temperature conversion tests
-- Edge case handling
+### **Test Coverage Includes:**
 
-## 🐳 Docker
+- ✅ Weather service unit tests
+- ✅ Data validation tests  
+- ✅ Temperature conversion tests
+- ✅ HTTP client resilience tests
+- ✅ Health check validations
+- ✅ Edge case handling
+
+### **Aspire Testing Benefits:**
+
+- 🔍 **Distributed Tracing in Tests**: See how test requests flow through services
+- 📊 **Test Metrics**: Monitor test performance and reliability
+- 🏥 **Health Check Testing**: Validate service health during test runs
+
+## 🐳 **Docker & Containerization**
 
 ### Build Individual Images
 
@@ -286,37 +458,76 @@ ASPNETCORE_ENVIRONMENT=Production dotnet run --project src/WeatherWeb
 docker compose logs weatherapi
 docker compose logs weatherweb
 
-# Restart specific service
-docker compose restart weatherweb
+## 🚀 **Getting Started in 30 Seconds**
 
-# Remove all containers and networks
-docker compose down --volumes --remove-orphans
+```bash
+# Clone and start with Aspire
+git clone https://github.com/pratiksinghlad/NetAspireDemo.git
+cd NetAspireDemo
+dotnet run --project src/NetAspireDemo.AppHost
+
+# 🎉 That's it! Everything starts automatically:
+# ✅ Weather API + Web App running  
+# ✅ Aspire Dashboard monitoring
+# ✅ Service discovery configured
+# ✅ Health checks active
+# ✅ Distributed tracing enabled
 ```
 
-### Logs
+## 🎯 **What Makes This Special**
 
-Check application logs:
-- **Local**: Console output from `dotnet run`
-- **Docker**: `docker compose logs [service-name]`
-- **Azure**: Azure portal > Web App > Log stream
+This isn't just another weather app - it's a showcase of **modern .NET development** with:
 
-## 🤝 Contributing
+- **🌟 .NET Aspire Integration**: Experience the future of .NET distributed applications
+- **📊 Built-in Observability**: See your app's behavior in real-time
+- **🔧 Service Discovery**: Services find each other automatically  
+- **🏥 Health Monitoring**: Know your app's health at a glance
+- **⚡ Developer Experience**: Single command to start everything
+- **🐳 Container Ready**: Docker support for production deployment
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes and add tests
-4. Ensure tests pass: `dotnet test`
-5. Commit your changes: `git commit -m 'Add amazing feature'`
-6. Push to the branch: `git push origin feature/amazing-feature`
-7. Open a Pull Request
+## 🤝 **Contributing**
 
-## 📄 License
+We welcome contributions! Here's how:
+
+1. **🍴 Fork** the repository
+2. **🌟 Create** a feature branch: `git checkout -b feature/amazing-feature`
+3. **✍️ Make** your changes and add tests
+4. **✅ Ensure** tests pass: `dotnet test`
+5. **📝 Commit** your changes: `git commit -m 'Add amazing feature'`
+6. **🚀 Push** to the branch: `git push origin feature/amazing-feature`
+7. **📬 Open** a Pull Request
+
+### **Areas for Contribution:**
+- 🌐 Additional weather data sources
+- 🎨 UI/UX improvements
+- 🧪 More comprehensive testing
+- 📊 Additional monitoring capabilities
+- 🔒 Security enhancements
+- 📱 Mobile responsiveness
+
+## 📄 **License**
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🔗 Additional Resources
+## 🎓 **Additional Resources**
 
-- [ASP.NET Core Documentation](https://docs.microsoft.com/aspnet/core)
-- [Docker Documentation](https://docs.docker.com/)
-- [Azure Web Apps](https://docs.microsoft.com/azure/app-service/)
-- [GitHub Actions](https://docs.github.com/actions)
+### **Microsoft Documentation**
+- 📖 [.NET Aspire Official Docs](https://learn.microsoft.com/en-us/dotnet/aspire/)
+- 🏗️ [ASP.NET Core Documentation](https://docs.microsoft.com/aspnet/core)
+- ☁️ [Azure Container Apps](https://docs.microsoft.com/azure/container-apps/)
+
+### **Learning & Tutorials**
+- 🎬 [.NET Aspire Video Series](https://www.youtube.com/playlist?list=PLdo4fOcmZ0oULyHSPBx-tQzePOYlhvrAU)
+- 🛠️ [Aspire Samples Repository](https://github.com/dotnet/aspire-samples)
+- 📊 [OpenTelemetry .NET](https://github.com/open-telemetry/opentelemetry-dotnet)
+
+### **Development Tools**
+- 🐳 [Docker Documentation](https://docs.docker.com/)
+- 🚀 [GitHub Actions](https://docs.github.com/actions)
+- 🔧 [Azure Developer CLI](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/)
+
+---
+
+**⭐ Star this repository if you found it helpful!**
+
+*Built with ❤️ using .NET Aspire, ASP.NET Core, and modern development practices.*
