@@ -12,7 +12,7 @@ This project has been enhanced with .NET Aspire integration to provide observabi
 ## Running with Aspire
 
 ### Prerequisites
-- .NET 8.0 SDK
+- .NET 9.0 SDK
 - Docker Desktop (for containers)
 
 ### Run with Aspire Dashboard

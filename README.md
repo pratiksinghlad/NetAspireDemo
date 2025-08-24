@@ -200,9 +200,9 @@ Property DashboardPath: The path to the Aspire Dashboard binaries is missing.
 
 **Solution Options:**
 
-1. **Use Stable .NET 8 SDK** (Recommended)
+1. **Use Stable .NET 9 SDK** (Recommended)
    ```bash
-   # Download and install .NET 8 SDK from https://dotnet.microsoft.com/download/dotnet/8.0
+   # Download and install .NET 8 SDK from https://dotnet.microsoft.com/download/dotnet/9.0
    dotnet --version  # Should show 8.x.x
    dotnet run --project src/NetAspireDemo.AppHost
    ```

@@ -10,7 +10,7 @@
 - **HttpClient Factory**: Used typed HttpClient with dependency injection for API communication from the web frontend.
 
 ## Docker Configuration
-- **Base Images**: Using official Microsoft .NET images (`mcr.microsoft.com/dotnet/sdk:8.0` for build, `mcr.microsoft.com/dotnet/aspnet:8.0` for runtime).
+- **Base Images**: Using official Microsoft .NET images (`mcr.microsoft.com/dotnet/sdk:9.0` for build, `mcr.microsoft.com/dotnet/aspnet:9.0` for runtime).
 - **Security**: Docker containers run as non-root user for security.
 - **Port Mapping**: API runs on port 5001, Web runs on port 5000 locally. In Docker, both use port 8080 internally.
 
