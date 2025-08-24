@@ -2,9 +2,14 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
+# Copy central package management files first
+COPY ["Directory.Packages.props", "./"]
+COPY ["Directory.Build.props", "./"]
+
 # Copy project files
 COPY ["src/WeatherApi/WeatherApi.csproj", "src/WeatherApi/"]
 COPY ["src/SharedModels/SharedModels.csproj", "src/SharedModels/"]
+COPY ["src/NetAspireDemo.ServiceDefaults/NetAspireDemo.ServiceDefaults.csproj", "src/NetAspireDemo.ServiceDefaults/"]
 
 # Restore dependencies
 RUN dotnet restore "src/WeatherApi/WeatherApi.csproj"

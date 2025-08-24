@@ -1,0 +1,64 @@
+GitHub Copilot: I'll provide you with a concise step-by-step guide to run this project in Docker on Windows. ## 🐳 Docker Setup for Windows - Step by Step
+
+### Prerequisites Check:
+```cmd
+docker --version
+docker-compose --version
+```
+
+### Quick Start (3 Steps):
+
+**1. Clone & Navigate:**
+```cmd
+git clone https://github.com/pratiksinghlad/NetAspireDemo.git
+cd NetAspireDemo
+```
+
+**2. Build & Run:**
+```cmd
+docker-compose up --build
+```
+
+**3. Access Applications:**
+- **Web App**: http://localhost:5000
+- **API**: http://localhost:5001/swagger
+- **Health Check**: http://localhost:5001/health
+
+### Alternative Commands:
+
+**Run in Background:**
+```cmd
+docker-compose up -d --build
+```
+
+**Stop Services:**
+```cmd
+docker-compose down
+```
+
+**View Logs:**
+```cmd
+docker-compose logs -f
+```
+
+**Rebuild Only:**
+```cmd
+docker-compose build --no-cache
+```
+
+### Troubleshooting:
+
+**If port conflicts occur:**
+```cmd
+netstat -ano | findstr :5000
+netstat -ano | findstr :5001
+```
+
+**Reset Everything:**
+```cmd
+docker-compose down
+docker system prune -f
+docker-compose up --build
+```
+
+That's it! Your weather app will be running in Docker containers with automatic service discovery between the API and Web components.

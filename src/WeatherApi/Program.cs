@@ -1,4 +1,3 @@
-using SharedModels;
 using WeatherApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
