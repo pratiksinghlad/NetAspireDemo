@@ -5,6 +5,12 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
 
+  <!--
+    PackageReference elements do not specify Version attributes because this project uses
+    Central Package Management via Directory.Packages.props. Package versions are managed
+    centrally in that file. See https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management
+    for more information.
+  -->
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
