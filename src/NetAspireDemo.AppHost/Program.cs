@@ -5,7 +5,7 @@ var weatherApi = builder.AddProject("weatherapi", "../WeatherApi/WeatherApi.cspr
     .WithExternalHttpEndpoints();
 
 // Add the WeatherWeb service with dependency on WeatherApi  
-var weatherWeb = builder.AddProject("weatherweb", "../WeatherWeb/WeatherWeb.csproj")
+builder.AddProject("weatherweb", "../WeatherWeb/WeatherWeb.csproj")
     .WithReference(weatherApi)
     .WithExternalHttpEndpoints();
 
