@@ -1,0 +1,5 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- No additional properties or packages needed - inherits from Directory.Build.props -->
+
+</Project>

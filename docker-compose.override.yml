@@ -1,0 +1,12 @@
+services:
+  weatherapi:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    volumes:
+      - ./src/WeatherApi/logs:/app/logs
+
+  weatherweb:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    volumes:
+      - ./src/WeatherWeb/logs:/app/logs

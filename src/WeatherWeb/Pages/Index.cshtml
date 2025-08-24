@@ -1,0 +1,98 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Weather Dashboard";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h1 class="display-4 text-center mb-4">🌤️ Weather Dashboard</h1>
+            
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" class="mb-4">
+                        <div class="input-group">
+                            <input type="text" asp-for="CityName" class="form-control" placeholder="Enter city name (e.g., New York, London, Tokyo)" required>
+                            <button type="submit" class="btn btn-primary">Get Weather</button>
+                        </div>
+                        <span asp-validation-for="CityName" class="text-danger"></span>
+                    </form>
+                </div>
+            </div>
+
+            @if (Model.CurrentWeather != null)
+            {
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h3>Current Weather in @Model.CurrentWeather.City</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h4>@Model.CurrentWeather.TemperatureC°C / @Model.CurrentWeather.TemperatureF°F</h4>
+                                <p class="lead">@Model.CurrentWeather.Summary</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Humidity:</strong> @Model.CurrentWeather.Humidity%</p>
+                                <p><strong>Wind Speed:</strong> @Model.CurrentWeather.WindSpeed.ToString("F1") km/h</p>
+                                <p><strong>Last Updated:</strong> @Model.CurrentWeather.LastUpdated.ToString("yyyy-MM-dd HH:mm") UTC</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @if (Model.Forecasts != null && Model.Forecasts.Any())
+            {
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h3>5-Day Forecast for @Model.CityName</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            @foreach (var forecast in Model.Forecasts)
+                            {
+                                <div class="col-md-2 col-sm-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-body text-center">
+                                            <h6 class="card-title">@forecast.Date.ToString("MMM dd")</h6>
+                                            <h5>@forecast.TemperatureC°C</h5>
+                                            <p class="card-text">@forecast.Summary</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="alert alert-warning mt-4" role="alert">
+                    @Model.ErrorMessage
+                </div>
+            }
+
+            @if (string.IsNullOrEmpty(Model.CityName) && Model.CurrentWeather == null)
+            {
+                <div class="alert alert-info mt-4" role="alert">
+                    <h5>Welcome to the Weather Dashboard!</h5>
+                    <p>Enter a city name to get current weather and a 5-day forecast. Try cities like:</p>
+                    <ul>
+                        <li>New York</li>
+                        <li>London</li>
+                        <li>Tokyo</li>
+                        <li>Sydney</li>
+                        <li>Berlin</li>
+                    </ul>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

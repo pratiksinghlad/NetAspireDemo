@@ -1,0 +1,79 @@
+# Production Docker Compose with Aspire Compatibility
+# This maintains the existing Docker Compose functionality while being compatible with Aspire
+services:
+  weatherapi:
+    build:
+      context: .
+      dockerfile: src/WeatherApi/Dockerfile
+    container_name: weatherapi
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      # OpenTelemetry configuration for production observability
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=weatherapi
+    ports:
+      - "5001:8080"
+    networks:
+      - weather-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  weatherweb:
+    build:
+      context: .
+      dockerfile: src/WeatherWeb/Dockerfile
+    container_name: weatherweb
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - WEATHER_API_BASE_URL=http://weatherapi:8080
+      # OpenTelemetry configuration for production observability
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=weatherweb
+    ports:
+      - "5000:8080"
+    depends_on:
+      weatherapi:
+        condition: service_healthy
+    networks:
+      - weather-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: OpenTelemetry Collector for production observability
+  # Uncomment to enable distributed tracing and metrics collection
+  # otel-collector:
+  #   image: otel/opentelemetry-collector-contrib:latest
+  #   container_name: otel-collector
+  #   command: ["--config=/etc/otel-collector-config.yml"]
+  #   volumes:
+  #     - ./otel-collector-config.yml:/etc/otel-collector-config.yml:ro
+  #   ports:
+  #     - "4317:4317"   # OTLP gRPC receiver
+  #     - "4318:4318"   # OTLP HTTP receiver
+  #     - "8889:8889"   # Prometheus metrics
+  #   networks:
+  #     - weather-network
+
+networks:
+  weather-network:
+    driver: bridge
+
+# For development, you can override settings with docker-compose.override.yml
+# Example override file content:
+# services:
+#   weatherapi:
+#     environment:
+#       - ASPNETCORE_ENVIRONMENT=Development
+#   weatherweb:
+#     environment:
+#       - ASPNETCORE_ENVIRONMENT=Development
