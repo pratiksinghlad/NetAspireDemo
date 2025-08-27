@@ -5,9 +5,17 @@ var builder = WebApplication.CreateBuilder(args);
 // Add Aspire service defaults
 builder.AddServiceDefaults();
 
+// Add Redis caching using connection string from Aspire
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    // The connection name "cache" corresponds to the Redis resource name in AppHost
+    options.Configuration = builder.Configuration.GetConnectionString("cache");
+});
+
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<ICacheService, RedisCacheService>();
 builder.Services.AddScoped<IWeatherService, WeatherService>();
 
 // Add CORS for local development
@@ -37,9 +45,9 @@ app.UseCors("AllowWebApp");
 app.MapDefaultEndpoints();
 
 // Weather API endpoints
-app.MapGet("/api/weather/forecast", (IWeatherService weatherService, string? city) =>
+app.MapGet("/api/weather/forecast", async (IWeatherService weatherService, string? city, CancellationToken cancellationToken) =>
 {
-    var forecasts = weatherService.GetForecast(city ?? "Default");
+    var forecasts = await weatherService.GetForecastAsync(city ?? "Default", cancellationToken);
     return Results.Ok(forecasts);
 })
 .WithName("GetWeatherForecast")
@@ -47,9 +55,9 @@ app.MapGet("/api/weather/forecast", (IWeatherService weatherService, string? cit
 .WithSummary("Get weather forecast for a city")
 .WithDescription("Returns a 5-day weather forecast for the specified city");
 
-app.MapGet("/api/weather/{city}", (IWeatherService weatherService, string city) =>
+app.MapGet("/api/weather/{city}", async (IWeatherService weatherService, string city, CancellationToken cancellationToken) =>
 {
-    var weather = weatherService.GetCurrentWeather(city);
+    var weather = await weatherService.GetCurrentWeatherAsync(city, cancellationToken);
     return Results.Ok(weather);
 })
 .WithName("GetCurrentWeather")

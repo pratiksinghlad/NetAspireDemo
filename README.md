@@ -37,6 +37,273 @@ This project has been migrated to **.NET 9** with **Central Package Management**
 └── 🧪 tests/WeatherApi.Tests/           # Unit tests
 ```
 
+## 🔴 **Redis Caching Integration**
+
+This project includes **Redis caching** powered by .NET Aspire for improved performance and scalability:
+
+### **🚀 Features**
+
+- **⚡ In-Memory Caching**: Weather data cached for faster response times
+- **🔗 Aspire Integration**: Redis container managed by .NET Aspire AppHost
+- **🐳 Docker Support**: Redis included in Docker Compose for production
+- **🧪 Testcontainers**: Integration tests using Redis Testcontainers
+- **🛡️ SOLID Principles**: Clean architecture with proper dependency injection
+
+### **⚙️ How It Works**
+
+1. **WeatherApi** requests are cached in Redis:
+   - Forecast data: cached for 10 minutes
+   - Current weather: cached for 5 minutes
+   - Cache keys: `forecast:{city}` and `current:{city}`
+
+2. **Cache Service** (`ICacheService`):
+   - Generic interface for caching operations
+   - Redis implementation using `IDistributedCache`
+   - Automatic JSON serialization/deserialization
+   - Error handling for corrupted cache data
+
+3. **Aspire Orchestration**:
+   - Redis container automatically started with AppHost
+   - Connection string managed by Aspire service discovery
+   - Health checks for Redis availability
+
+### **🧪 Testing**
+
+Comprehensive integration tests using **Testcontainers**:
+
+```bash
+# Run Redis integration tests
+dotnet test tests/WeatherApi.Tests/ --filter "Redis"
+```
+
+**Test Coverage:**
+- ✅ Cache hit/miss scenarios
+- ✅ Data expiration behavior  
+- ✅ Concurrent access patterns
+- ✅ Error handling (corrupted data)
+- ✅ Cache key validation
+- ✅ Performance consistency
+
+### **🔧 Local Development**
+
+**With Aspire (Recommended):**
+```bash
+dotnet run --project src/NetAspireDemo.AppHost
+# Redis automatically started and configured
+```
+
+**With Docker Compose:**
+```bash
+docker compose up --build
+# Includes Redis container with health checks
+```
+
+**Manual Redis Setup:**
+```bash
+# If running services individually
+docker run -d -p 6379:6379 redis:7-alpine
+dotnet run --project src/WeatherApi
+```
+
+## 🐳 **Redis Container Setup & Testing Guide**
+
+### **🚀 Running Redis for Development**
+
+#### **Option 1: Automatic with .NET Aspire (Recommended)**
+```bash
+# Redis is automatically managed - just run the AppHost
+dotnet run --project src/NetAspireDemo.AppHost
+```
+✅ **Benefits:**
+- Redis container automatically started and stopped
+- Connection strings managed by Aspire
+- Health checks and monitoring included
+- View Redis status in Aspire Dashboard
+
+#### **Option 2: Manual Redis Container**
+```bash
+# Start Redis container manually
+docker run -d \
+  --name redis-cache \
+  -p 6379:6379 \
+  redis:7-alpine
+
+# Verify Redis is running
+docker ps | grep redis
+
+# Test Redis connection
+docker exec -it redis-cache redis-cli ping
+# Should return: PONG
+
+# Start your services
+dotnet run --project src/WeatherApi
+dotnet run --project src/WeatherWeb
+```
+
+#### **Option 3: Docker Compose (Production-like)**
+```bash
+# Starts Redis + WeatherApi + WeatherWeb together
+docker compose up --build
+
+# View logs for specific service
+docker compose logs redis
+docker compose logs weatherapi
+
+# Stop all services
+docker compose down
+```
+
+### **🧪 Running Redis Integration Tests**
+
+#### **Prerequisites for Integration Tests**
+1. **Docker Desktop** must be running
+2. **Testcontainers** will automatically manage Redis containers for tests
+
+#### **Running Tests with Docker**
+
+**Full Test Suite (Requires Docker):**
+```bash
+# Make sure Docker Desktop is running first
+docker --version
+
+# Run all tests including integration tests
+dotnet test tests/WeatherApi.Tests/ --verbosity normal
+```
+
+**Unit Tests Only (No Docker Required):**
+```bash
+# Run only unit tests (skips Docker-dependent integration tests)
+dotnet test tests/WeatherApi.Tests/ --filter "FullyQualifiedName!~Integration" --verbosity normal
+```
+
+**Redis Integration Tests Only:**
+```bash
+# Run only Redis-specific integration tests
+dotnet test tests/WeatherApi.Tests/ --filter "FullyQualifiedName~Redis" --verbosity normal
+```
+
+#### **What Testcontainers Does**
+- 🐳 **Automatic Container Management**: Starts fresh Redis container for each test class
+- 🔒 **Isolation**: Each test gets a clean Redis instance  
+- 🧹 **Cleanup**: Automatically stops and removes containers after tests
+- 🚀 **Fast**: Uses lightweight Redis Alpine image
+
+#### **Test Categories**
+
+| Test Type | Description | Docker Required |
+|-----------|-------------|----------------|
+| **Unit Tests** | WeatherService with in-memory cache | ❌ No |
+| **Redis Cache Tests** | Redis operations with Testcontainers | ✅ Yes |
+| **Integration Tests** | End-to-end service testing with Redis | ✅ Yes |
+
+#### **Troubleshooting Test Issues**
+
+**❌ "Docker is not running" Error:**
+```bash
+# Start Docker Desktop first
+# Then run tests again
+dotnet test tests/WeatherApi.Tests/
+```
+
+**❌ Port Conflicts:**
+```bash
+# Testcontainers uses random ports automatically
+# No manual port management needed
+```
+
+**❌ Slow Test Performance:**
+```bash
+# First run downloads Redis image (one-time)
+# Subsequent runs are much faster
+docker pull redis:7-alpine  # Pre-download if needed
+```
+
+### **🔍 Monitoring Redis in Development**
+
+#### **With .NET Aspire Dashboard**
+1. Run `dotnet run --project src/NetAspireDemo.AppHost`
+2. Open Aspire Dashboard (auto-opens in browser)
+3. Go to **Resources** tab → See Redis container status
+4. Go to **Metrics** tab → Monitor cache hit/miss rates
+
+#### **Manual Redis Monitoring**
+```bash
+# Connect to Redis CLI
+docker exec -it redis-cache redis-cli
+
+# Monitor Redis commands in real-time
+MONITOR
+
+# Check cache keys
+KEYS *
+
+# View specific cached data
+GET "forecast:london"
+GET "current:newyork"
+
+# Check Redis info
+INFO memory
+INFO stats
+```
+
+#### **Redis Performance Monitoring**
+```bash
+# Check cache hit ratio
+docker exec -it redis-cache redis-cli INFO stats | grep keyspace
+
+# Monitor memory usage
+docker exec -it redis-cache redis-cli INFO memory | grep used_memory_human
+
+# View connected clients
+docker exec -it redis-cache redis-cli CLIENT LIST
+```
+
+### **🚀 Redis Container Best Practices**
+
+#### **Development Environment**
+```bash
+# Use .NET Aspire for development (recommended)
+dotnet run --project src/NetAspireDemo.AppHost
+
+# Or start Redis with data persistence
+docker run -d \
+  --name redis-dev \
+  -p 6379:6379 \
+  -v redis-data:/data \
+  redis:7-alpine redis-server --appendonly yes
+```
+
+#### **Production Environment**
+```bash
+# Use docker-compose.yml for production deployment
+docker compose -f docker-compose.yml up -d
+
+# Or use managed Redis service (Azure Cache for Redis, AWS ElastiCache)
+```
+
+#### **Testing Environment**
+```bash
+# Testcontainers handles everything automatically
+dotnet test tests/WeatherApi.Tests/
+
+# No manual Redis setup needed for tests!
+```
+
+### **📋 Quick Reference Summary**
+
+| Scenario | Redis Setup | Command |
+|----------|-------------|---------|
+| **🎯 Development (Recommended)** | Automatic via Aspire | `dotnet run --project src/NetAspireDemo.AppHost` |
+| **🔧 Individual Services** | Manual Docker container | `docker run -d -p 6379:6379 redis:7-alpine` |
+| **🐳 Production-like** | Docker Compose | `docker compose up --build` |
+| **🧪 Testing** | Automatic via Testcontainers | `dotnet test` |
+
+**Key Benefits:**
+- ✅ **Aspire**: Zero-config Redis with monitoring
+- ✅ **Testcontainers**: Isolated test environments
+- ✅ **Docker Compose**: Production-ready setup
+- ✅ **Manual Setup**: Full control for development
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -66,6 +333,7 @@ This project has been migrated to **.NET 9** with **Central Package Management**
    - **📊 Aspire Dashboard**: `https://localhost:15001` (monitoring & insights)
    - **🌐 Weather API**: `http://localhost:5001` (auto-detected port)
    - **🖥️ Weather Web**: `http://localhost:5000` (auto-detected port)
+   - **🔴 Redis Cache**: Automatically managed by Aspire
 
 **For .NET 10 Preview Users:**
 ```bash
@@ -74,19 +342,45 @@ This project has been migrated to **.NET 9** with **Central Package Management**
 
 ### 🔧 **Option 2: Traditional Development (Individual Services)**
 
-1. **Start the API** (Terminal 1)
+**⚠️ Important:** Option 2 requires manual Redis setup since the services expect Redis to be available.
+
+1. **Start Redis Container** (Terminal 1)
+   ```bash
+   docker run -d --name redis-dev -p 6379:6379 redis:7-alpine
+   ```
+
+2. **Start the API** (Terminal 2)
    ```bash
    dotnet run --project src/WeatherApi
    ```
 
-2. **Start the Web App** (Terminal 2)
+3. **Start the Web App** (Terminal 3)
    ```bash
    dotnet run --project src/WeatherWeb
+   ```
+
+4. **Access the applications:**
+   - **🌐 Weather API**: `https://localhost:7001` or `http://localhost:5001`
+   - **🖥️ Weather Web**: `https://localhost:7000` or `http://localhost:5000`
+   - **🔴 Redis**: `localhost:6379`
+
+5. **Stop services when done:**
+   ```bash
+   # Stop and remove Redis container
+   docker stop redis-dev && docker rm redis-dev
+   ```
+
 ### 🐳 **Option 3: Docker Compose (Production-like)**
 
 ```bash
+# Starts Redis + WeatherApi + WeatherWeb together
 docker compose up --build
 ```
+
+**Access:**
+- **🖥️ Weather Web**: `http://localhost:5000`
+- **🌐 Weather API**: `http://localhost:5001`
+- **🔴 Redis**: `localhost:6379`
 
 ## 📊 **The .NET Aspire Dashboard - Your Command Center**
 
@@ -174,6 +468,80 @@ dotnet run --project src/NetAspireDemo.AppHost
 - Rich dashboard for real-time insights
 - Hot reload and fast iteration
 - Integrated debugging and diagnostics
+
+## 🧪 **Testing the Application**
+
+### **Running Tests**
+
+#### **📋 All Tests (Requires Docker Desktop)**
+```bash
+# Make sure Docker Desktop is running
+docker --version
+
+# Run complete test suite including Redis integration tests
+dotnet test --verbosity normal
+```
+
+#### **⚡ Unit Tests Only (No Docker Required)**
+```bash
+# Fast tests that don't require containers
+dotnet test --filter "FullyQualifiedName!~Integration" --verbosity normal
+```
+
+#### **🔴 Redis Integration Tests Only**
+```bash
+# Tests that specifically test Redis caching with Testcontainers
+dotnet test --filter "FullyQualifiedName~Redis" --verbosity normal
+```
+
+### **Test Categories Explained**
+
+| Test Type | What It Tests | Docker Required | Speed |
+|-----------|---------------|----------------|-------|
+| **Unit Tests** | Business logic with mocked dependencies | ❌ No | ⚡ Fast |
+| **Redis Cache Tests** | Redis operations with real containers | ✅ Yes | 🐌 Slower |
+| **Service Integration Tests** | End-to-end with Redis caching | ✅ Yes | 🐌 Slower |
+
+### **Test Scenarios Covered**
+
+✅ **Caching Behavior**
+- Cache hit/miss scenarios
+- Data expiration (5min current, 10min forecast)
+- Cache key generation and validation
+
+✅ **Error Handling**
+- Invalid city names and empty inputs
+- Corrupted cache data handling
+- Redis connection failures
+
+✅ **Performance**
+- Concurrent request handling
+- Cache consistency across multiple calls
+- Memory usage and cleanup
+
+### **Troubleshooting Tests**
+
+**❌ "Docker is not running" Error:**
+```bash
+# Solution: Start Docker Desktop first
+# Then run tests again
+dotnet test
+```
+
+**❌ Tests are slow on first run:**
+```bash
+# Normal: First run downloads Redis container image
+# Subsequent runs are much faster
+# Pre-download Redis image:
+docker pull redis:7-alpine
+```
+
+**❌ Port conflicts:**
+```bash
+# Testcontainers automatically handles ports
+# No manual configuration needed
+# Each test gets isolated Redis instance
+```
 
 ## 📱 **Using the Application**
 
