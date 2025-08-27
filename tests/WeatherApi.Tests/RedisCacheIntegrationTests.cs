@@ -1,4 +1,3 @@
-using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SharedModels;
@@ -61,10 +60,10 @@ public class RedisCacheIntegrationTests : IAsyncLifetime
 
         // Assert
         var retrieved = await _cacheService.GetAsync<WeatherForecast>(key);
-        retrieved.Should().NotBeNull();
-        retrieved!.Date.Should().Be(value.Date);
-        retrieved.TemperatureC.Should().Be(value.TemperatureC);
-        retrieved.Summary.Should().Be(value.Summary);
+        Assert.NotNull(retrieved);
+        Assert.Equal(value.Date, retrieved.Date);
+        Assert.Equal(value.TemperatureC, retrieved.TemperatureC);
+        Assert.Equal(value.Summary, retrieved.Summary);
     }
 
     [Fact]
@@ -77,7 +76,7 @@ public class RedisCacheIntegrationTests : IAsyncLifetime
         var result = await _cacheService!.GetAsync<WeatherForecast>(key);
 
         // Assert
-        result.Should().BeNull();
+        Assert.Null(result);
     }
 
     [Fact]
@@ -93,14 +92,14 @@ public class RedisCacheIntegrationTests : IAsyncLifetime
         
         // Verify it exists initially
         var immediate = await _cacheService.GetAsync<CurrentWeather>(key);
-        immediate.Should().NotBeNull();
+        Assert.NotNull(immediate);
 
         // Wait for expiration
         await Task.Delay(TimeSpan.FromSeconds(3));
         
         // Assert
         var expired = await _cacheService.GetAsync<CurrentWeather>(key);
-        expired.Should().BeNull();
+        Assert.Null(expired);
     }
 
     [Fact]
@@ -118,8 +117,8 @@ public class RedisCacheIntegrationTests : IAsyncLifetime
         var afterRemove = await _cacheService.ExistsAsync(key);
 
         // Assert
-        beforeRemove.Should().BeTrue();
-        afterRemove.Should().BeFalse();
+        Assert.True(beforeRemove);
+        Assert.False(afterRemove);
     }
 
     [Fact]
@@ -137,8 +136,8 @@ public class RedisCacheIntegrationTests : IAsyncLifetime
         var nonExistingResult = await _cacheService.ExistsAsync(nonExistingKey);
 
         // Assert
-        existingResult.Should().BeTrue();
-        nonExistingResult.Should().BeFalse();
+        Assert.True(existingResult);
+        Assert.False(nonExistingResult);
     }
 
     [Fact]
@@ -179,10 +178,10 @@ public class RedisCacheIntegrationTests : IAsyncLifetime
         var retrieved = await _cacheService.GetAsync<WeatherForecast[]>(key);
 
         // Assert
-        retrieved.Should().NotBeNull();
-        retrieved.Should().HaveCount(3);
-        retrieved![0].Date.Should().Be(forecasts[0].Date);
-        retrieved[1].TemperatureC.Should().Be(forecasts[1].TemperatureC);
-        retrieved[2].Summary.Should().Be(forecasts[2].Summary);
+        Assert.NotNull(retrieved);
+        Assert.Equal(3, retrieved.Length);
+        Assert.Equal(forecasts[0].Date, retrieved[0].Date);
+        Assert.Equal(forecasts[1].TemperatureC, retrieved[1].TemperatureC);
+        Assert.Equal(forecasts[2].Summary, retrieved[2].Summary);
     }
 }

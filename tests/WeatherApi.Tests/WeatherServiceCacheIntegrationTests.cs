@@ -1,4 +1,3 @@
-using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using SharedModels;
 using Testcontainers.Redis;
@@ -67,14 +66,22 @@ public class WeatherServiceCacheIntegrationTests : IAsyncLifetime
         var secondCall = await _weatherService.GetForecastAsync(city);
 
         // Assert
-        firstCall.Should().NotBeNull();
-        firstCall.Should().HaveCount(5);
+        Assert.NotNull(firstCall);
+        Assert.Equal(5, firstCall.Count());
         
-        cachedData.Should().NotBeNull();
-        cachedData.Should().HaveCount(5);
+        Assert.NotNull(cachedData);
+        Assert.Equal(5, cachedData.Length);
         
         // Both calls should return the same data (from cache)
-        secondCall.Should().BeEquivalentTo(firstCall);
+        Assert.Equal(firstCall.Count(), secondCall.Count());
+        var firstList = firstCall.ToList();
+        var secondList = secondCall.ToList();
+        for (int i = 0; i < firstList.Count; i++)
+        {
+            Assert.Equal(firstList[i].Date, secondList[i].Date);
+            Assert.Equal(firstList[i].TemperatureC, secondList[i].TemperatureC);
+            Assert.Equal(firstList[i].Summary, secondList[i].Summary);
+        }
     }
 
     [Fact]
@@ -94,14 +101,20 @@ public class WeatherServiceCacheIntegrationTests : IAsyncLifetime
         var secondCall = await _weatherService.GetCurrentWeatherAsync(city);
 
         // Assert
-        firstCall.Should().NotBeNull();
-        firstCall.City.Should().Be(city);
+        Assert.NotNull(firstCall);
+        Assert.Equal(city, firstCall.City);
         
-        cachedData.Should().NotBeNull();
-        cachedData!.City.Should().Be(city);
+        Assert.NotNull(cachedData);
+        Assert.Equal(city, cachedData!.City);
         
         // Both calls should return the same data (from cache)
-        secondCall.Should().BeEquivalentTo(firstCall);
+        Assert.NotNull(secondCall);
+        Assert.Equal(firstCall.City, secondCall.City);
+        Assert.Equal(firstCall.TemperatureC, secondCall.TemperatureC);
+        Assert.Equal(firstCall.TemperatureF, secondCall.TemperatureF);
+        Assert.Equal(firstCall.Summary, secondCall.Summary);
+        Assert.Equal(firstCall.Humidity, secondCall.Humidity);
+        Assert.Equal(firstCall.WindSpeed, secondCall.WindSpeed);
     }
 
     [Fact]
@@ -116,20 +129,40 @@ public class WeatherServiceCacheIntegrationTests : IAsyncLifetime
         var forecast2 = await _weatherService.GetForecastAsync(city2);
 
         // Assert
-        forecast1.Should().NotBeNull();
-        forecast2.Should().NotBeNull();
+        Assert.NotNull(forecast1);
+        Assert.NotNull(forecast2);
         
         // Different cities should have different forecasts
-        forecast1.Should().NotBeEquivalentTo(forecast2);
+        Assert.NotEqual(forecast1, forecast2);
         
         // Verify both are cached separately
         var cached1 = await _cacheService!.GetAsync<WeatherForecast[]>($"forecast:{city1.ToLowerInvariant()}");
         var cached2 = await _cacheService.GetAsync<WeatherForecast[]>($"forecast:{city2.ToLowerInvariant()}");
         
-        cached1.Should().NotBeNull();
-        cached2.Should().NotBeNull();
-        cached1.Should().BeEquivalentTo(forecast1);
-        cached2.Should().BeEquivalentTo(forecast2);
+        Assert.NotNull(cached1);
+        Assert.NotNull(cached2);
+        
+        // Verify cached data matches the original forecasts
+        Assert.Equal(forecast1.Count(), cached1!.Length);
+        Assert.Equal(forecast2.Count(), cached2!.Length);
+        
+        for (int i = 0; i < forecast1.Count(); i++)
+        {
+            var f1 = forecast1.ElementAt(i);
+            var c1 = cached1[i];
+            Assert.Equal(f1.Date, c1.Date);
+            Assert.Equal(f1.TemperatureC, c1.TemperatureC);
+            Assert.Equal(f1.Summary, c1.Summary);
+        }
+        
+        for (int i = 0; i < forecast2.Count(); i++)
+        {
+            var f2 = forecast2.ElementAt(i);
+            var c2 = cached2[i];
+            Assert.Equal(f2.Date, c2.Date);
+            Assert.Equal(f2.TemperatureC, c2.TemperatureC);
+            Assert.Equal(f2.Summary, c2.Summary);
+        }
     }
 
     [Fact]
@@ -163,14 +196,26 @@ public class WeatherServiceCacheIntegrationTests : IAsyncLifetime
         var forecast2 = await _weatherService.GetForecastAsync(city); // Should come from cache
 
         // Assert
-        forecast1.Should().NotBeNull();
-        forecast1.Should().HaveCount(5);
-        forecast2.Should().BeEquivalentTo(forecast1);
+        Assert.NotNull(forecast1);
+        Assert.Equal(5, forecast1.Count());
+        
+        Assert.NotNull(forecast2);
+        Assert.Equal(forecast1.Count(), forecast2.Count());
+        
+        // Compare each element since they should be identical (from cache)
+        for (int i = 0; i < forecast1.Count(); i++)
+        {
+            var f1 = forecast1.ElementAt(i);
+            var f2 = forecast2.ElementAt(i);
+            Assert.Equal(f1.Date, f2.Date);
+            Assert.Equal(f1.TemperatureC, f2.TemperatureC);
+            Assert.Equal(f1.Summary, f2.Summary);
+        }
         
         // All forecasts should be for future dates
         foreach (var forecast in forecast1)
         {
-            forecast.Date.Should().BeAfter(DateOnly.FromDateTime(DateTime.Today));
+            Assert.True(forecast.Date > DateOnly.FromDateTime(DateTime.Today));
         }
     }
 
@@ -187,16 +232,21 @@ public class WeatherServiceCacheIntegrationTests : IAsyncLifetime
         // Assert
         foreach (var day in forecast)
         {
-            day.TemperatureC.Should().BeInRange(-50, 60); // Reasonable temperature range
-            day.Summary.Should().NotBeNullOrWhiteSpace();
-            day.Date.Should().BeAfter(DateOnly.FromDateTime(DateTime.Today));
+            Assert.InRange(day.TemperatureC, -50, 60); // Reasonable temperature range
+            Assert.NotNull(day.Summary);
+            Assert.NotEmpty(day.Summary.Trim());
+            Assert.True(day.Date > DateOnly.FromDateTime(DateTime.Today));
         }
 
-        currentWeather.City.Should().Be(city);
-        currentWeather.TemperatureC.Should().BeInRange(-50, 60);
-        currentWeather.Summary.Should().NotBeNullOrWhiteSpace();
-        currentWeather.Humidity.Should().BeInRange(0, 100);
-        currentWeather.WindSpeed.Should().BeInRange(0, 200);
-        currentWeather.LastUpdated.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(1));
+        Assert.Equal(city, currentWeather.City);
+        Assert.InRange(currentWeather.TemperatureC, -50, 60);
+        Assert.NotNull(currentWeather.Summary);
+        Assert.NotEmpty(currentWeather.Summary.Trim());
+        Assert.InRange(currentWeather.Humidity, 0, 100);
+        Assert.InRange(currentWeather.WindSpeed, 0, 200);
+        
+        // Check that LastUpdated is within a reasonable time window
+        var timeDifference = Math.Abs((DateTime.UtcNow - currentWeather.LastUpdated).TotalMinutes);
+        Assert.True(timeDifference <= 1, $"LastUpdated should be within 1 minute of UtcNow, but was {timeDifference} minutes away");
     }
 }
