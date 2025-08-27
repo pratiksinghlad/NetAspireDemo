@@ -1,25 +1,27 @@
 using WeatherApi.Services;
-using SharedModels;
 
 namespace WeatherApi.Tests;
 
 public class WeatherServiceTests
 {
     private readonly IWeatherService _weatherService;
+    private readonly ICacheService _cacheService;
 
     public WeatherServiceTests()
     {
-        _weatherService = new WeatherService();
+        // Create a simple in-memory cache service for testing
+        _cacheService = new InMemoryCacheService();
+        _weatherService = new WeatherService(_cacheService);
     }
 
     [Fact]
-    public void GetForecast_ReturnsValidForecast()
+    public async Task GetForecastAsync_ReturnsValidForecast()
     {
         // Arrange
         const string city = "New York";
 
         // Act
-        var forecasts = _weatherService.GetForecast(city);
+        var forecasts = await _weatherService.GetForecastAsync(city);
 
         // Assert
         Assert.NotNull(forecasts);
@@ -36,13 +38,13 @@ public class WeatherServiceTests
     }
 
     [Fact]
-    public void GetCurrentWeather_ReturnsValidWeather()
+    public async Task GetCurrentWeatherAsync_ReturnsValidWeather()
     {
         // Arrange
         const string city = "London";
 
         // Act
-        var weather = _weatherService.GetCurrentWeather(city);
+        var weather = await _weatherService.GetCurrentWeatherAsync(city);
 
         // Assert
         Assert.NotNull(weather);
@@ -61,10 +63,10 @@ public class WeatherServiceTests
     [InlineData("Sydney")]
     [InlineData("Berlin")]
     [InlineData("Default")]
-    public void GetForecast_DifferentCities_ReturnsConsistentData(string city)
+    public async Task GetForecastAsync_DifferentCities_ReturnsConsistentData(string city)
     {
         // Act
-        var forecasts = _weatherService.GetForecast(city);
+        var forecasts = await _weatherService.GetForecastAsync(city);
 
         // Assert
         Assert.NotNull(forecasts);
@@ -80,12 +82,28 @@ public class WeatherServiceTests
 
     [Theory]
     [InlineData("")]
+    [InlineData("   ")]
+    public async Task GetCurrentWeatherAsync_InvalidCities_ShouldThrowException(string city)
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() => _weatherService.GetCurrentWeatherAsync(city));
+    }
+
+    [Fact]
+    public async Task GetCurrentWeatherAsync_NullCity_ShouldThrowException()
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() => _weatherService.GetCurrentWeatherAsync(null!));
+    }
+
+    [Theory]
     [InlineData("Unknown City")]
     [InlineData("Test123")]
-    public void GetCurrentWeather_UnknownCities_ReturnsValidResponse(string city)
+    [InlineData("ValidCityName")]
+    public async Task GetCurrentWeatherAsync_ValidCities_ShouldReturnValidResponse(string city)
     {
         // Act
-        var weather = _weatherService.GetCurrentWeather(city);
+        var weather = await _weatherService.GetCurrentWeatherAsync(city);
 
         // Assert
         Assert.NotNull(weather);
@@ -94,16 +112,86 @@ public class WeatherServiceTests
     }
 
     [Fact]
-    public void TemperatureConversion_IsCorrect()
+    public async Task TemperatureConversion_IsCorrect()
     {
         // Arrange
         const string city = "Test";
 
         // Act
-        var weather = _weatherService.GetCurrentWeather(city);
+        var weather = await _weatherService.GetCurrentWeatherAsync(city);
 
         // Assert
         var expectedF = 32 + (int)(weather.TemperatureC / 0.5556);
         Assert.Equal(expectedF, weather.TemperatureF);
+    }
+
+    [Fact]
+    public async Task GetForecastAsync_CalledTwice_ReturnsCachedData()
+    {
+        // Arrange
+        const string city = "CacheTest";
+
+        // Act
+        var firstCall = await _weatherService.GetForecastAsync(city);
+        var secondCall = await _weatherService.GetForecastAsync(city);
+
+        // Assert
+        Assert.Equal(firstCall.Count(), secondCall.Count());
+        var firstList = firstCall.ToList();
+        var secondList = secondCall.ToList();
+        
+        for (int i = 0; i < firstList.Count; i++)
+        {
+            Assert.Equal(firstList[i].Date, secondList[i].Date);
+            Assert.Equal(firstList[i].TemperatureC, secondList[i].TemperatureC);
+            Assert.Equal(firstList[i].Summary, secondList[i].Summary);
+        }
+    }
+}
+
+/// <summary>
+/// Simple in-memory cache service for unit testing
+/// </summary>
+public class InMemoryCacheService : ICacheService
+{
+    private readonly Dictionary<string, (object Value, DateTime? Expiry)> _cache = new();
+
+    public Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default) where T : class
+    {
+        if (_cache.TryGetValue(key, out var entry))
+        {
+            if (entry.Expiry == null || entry.Expiry > DateTime.UtcNow)
+            {
+                return Task.FromResult(entry.Value as T);
+            }
+            _cache.Remove(key);
+        }
+        return Task.FromResult<T?>(null);
+    }
+
+    public Task SetAsync<T>(string key, T value, TimeSpan? expiration = null, CancellationToken cancellationToken = default) where T : class
+    {
+        var expiry = expiration.HasValue ? DateTime.UtcNow.Add(expiration.Value) : (DateTime?)null;
+        _cache[key] = (value, expiry);
+        return Task.CompletedTask;
+    }
+
+    public Task RemoveAsync(string key, CancellationToken cancellationToken = default)
+    {
+        _cache.Remove(key);
+        return Task.CompletedTask;
+    }
+
+    public Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default)
+    {
+        if (_cache.TryGetValue(key, out var entry))
+        {
+            if (entry.Expiry == null || entry.Expiry > DateTime.UtcNow)
+            {
+                return Task.FromResult(true);
+            }
+            _cache.Remove(key);
+        }
+        return Task.FromResult(false);
     }
 }
